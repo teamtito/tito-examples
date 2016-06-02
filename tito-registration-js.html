@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta name="charset" content="UTF-8">
+    <script src="http://code.jquery.com/jquery-2.2.0.min.js"></script>
+    <script src="https://ti.to/paulca/awesomeconf/registration.js"></script>
+    <script type="text/javascript">
+      var App = {
+        event:        null,
+        registration: null,
+
+        initialize: function(event) {
+          this.event = event;
+          if(this.returningFromPaypal())
+            this.loadAndDisplayRegistrationFromIdParameter()
+          else
+            this.displayTicketSelectionForm();
+        },
+
+        addReleasesToForm: function() {
+          for(var i = 0; i < this.event.releases.length; i++) {
+            release = this.event.releases[i];
+            price   = (release.attributes.price !== null) ? release.attributes.price : 'Free'
+            $('#releases').append('<input type="number" name="release_ids[' + release.id + ']" placeholder="Quantity" /> ' + release.attributes.title + ' (' + price + ') <br />')
+          }
+        },
+
+        changePaymentMethod: function() {
+          $('#registration-card-fields, #registration-invoice-fields').hide();
+          switch($("[name='payment\[method\]']:checked").val()) {
+            case "credit_card": $('#registration-card-fields').show(); break;
+            case "invoice":     $('#registration-invoice-fields').show(); break;
+            case "paypal":      break;
+          }
+        },
+
+        displayPaymentDeclined: function() {
+          this.displayStatus('Payment declined');
+          $('#registration-form').show();
+        },
+
+        displayProcessing: function() {
+          this.displayStatus('Processing');
+          $('#ticket-selection-form, #registration-form').hide();
+        },
+
+        displayRegistrationComplete: function(registration) {
+          this.displayStatus('Registration successful, please <a href="' + registration.meta.link + '" target="_blank">complete your tickets</a>.')
+          $('#ticket-selection-form, #registration-form').hide();
+        },
+
+        displayRegistrationForm: function(registration) {
+          this.displayStatus('');
+          $('#ticket-selection-form').hide();
+          $('#registration-form').show();
+          $(document).on("change", "[name='payment\[method\]']", this.changePaymentMethod.bind(this))
+        },
+
+        displayStatus: function(message) {
+          $('#status').html(message)
+        },
+
+        displayTicketSelectionForm: function() {
+          this.displayStatus('')
+          this.addReleasesToForm();
+          $(document).on("submit", "#ticket-selection-form", this.submitTicketSelection.bind(this))
+          $(document).on("submit", "#registration-form", this.submitRegistration.bind(this))
+          $('#ticket-selection-form').show();
+        },
+
+        getUrlParameter: function(sParam) {
+          var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+              sURLVariables = sPageURL.split('&'),
+              sParameterName,
+              i;
+
+          for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
+
+            if (sParameterName[0] === sParam) {
+              return sParameterName[1] === undefined ? true : sParameterName[1];
+            }
+          }
+          return '';
+        },
+
+        handleError: function(message) {
+          this.displayStatus(message);
+          $('#ticket-selection-form').show();
+        },
+
+        handleUpdate: function(registration) {
+          switch(registration.attributes.state) {
+            case "ready":
+              this.displayRegistrationForm(registration); break;
+            case "redirected":
+              this.redirectToPaypal(registration); break;
+            case "complete":
+            case "confirmed":
+            case "incomplete":
+              this.displayRegistrationComplete(registration); break;
+            case "payment_declined":
+              this.displayPaymentDeclined(); break;
+          }
+        },
+
+        loadAndDisplayRegistrationFromIdParameter: function() {
+          this.registration = Tito.Registration.initialize(this.event, {
+            callbacks: { change: this.handleUpdate.bind(this) }, id: this.getUrlParameter('id')
+          });
+          this.registration.get();
+        },
+
+        redirectToPaypal: function(registration) {
+          document.location.href = registration.meta.redirect_url;
+        },
+
+        returningFromPaypal: function() {
+          return (this.getUrlParameter('id').length > 0);
+        },
+
+        registrationParameters: function() {
+          $form = $('#registration-form')
+          return {
+            billing_address: {
+              address:               $form.find("input[name='billing_address\[address\]']").val(),
+              city:                  $form.find("input[name='billing_address\[city\]']").val(),
+              country:               $form.find("input[name='billing_address\[country\]']").val(),
+              state_province_region: $form.find("input[name='billing_address\[state_province_region\]']").val(),
+              zip_postal_code:       $form.find("input[name='billing_address\[zip_postal_code\]']").val()
+            },
+            card: {
+              expiry_month:       $form.find("input[name='card\[expiry_month\]']").val(),
+              expiry_year:        $form.find("input[name='card\[expiry_year\]']").val(),
+              number:             $form.find("input[name='card\[number\]']").val(),
+              verification_value: $form.find("input[name='card\[verification_value\]']").val(),
+            },
+            email:                          $form.find('input[name=email]').val(),
+            name:                           $form.find('input[name=name]').val(),
+            company_name:                   $form.find('input[name=company_name]').val(),
+            payment_reference:              $form.find("input[name='payment\[reference\]']").val(),
+            payment_option_type:            $form.find("input[name='payment\[method\]']:checked").val()
+          }
+        },
+
+        submitTicketSelection: function() {
+          this.registration = this.event.register(this.ticketSelectionParameters(), {
+            callbacks: {
+              change: this.handleUpdate.bind(this),
+              error:  this.handleError.bind(this)
+            }
+          });
+          this.displayProcessing()
+          return false;
+        },
+
+        submitRegistration: function() {
+          this.registration.update(this.registrationParameters());
+          this.displayProcessing()
+          return false;
+        },
+
+        ticketSelectionParameters: function($form) {
+          releaseIds = {}
+          $form = $('#ticket-selection-form')
+          $form.find('input[name*=release_ids]').each(function(i, release) {
+            slug = release.name.match(/[^\[\]]+(?=\])/g)[0]
+            releaseIds[slug] = release.value
+          });
+          return {
+            release_ids: releaseIds,
+            test_mode:   true,
+          }
+        }
+      }
+
+      $(document).ready(function() {
+        Tito.Event.initialize({ ready: App.initialize.bind(App) });
+      });
+    </script>
+  </head>
+<body>
+
+  <div id="status">Loading</div>
+
+  <form id="ticket-selection-form" accept-charset="UTF-8" style="display:none;">
+    <div id="releases"></div>
+
+    <input type="submit" value="Continue" />
+  </form>
+
+  <form id="registration-form" accept-charset="UTF-8" style="display:none;">
+    <input type="text" name="name" placeholder="Full name" /><br />
+    <input type="text" name="email" placeholder="Email" /><br />
+    <input type="text" name="company_name" placeholder="Company name" /><br />
+
+    <label><input type="radio" name="payment[method]" value="credit_card" />Card</label>
+    <label><input type="radio" name="payment[method]" value="invoice" />Invoice</label>
+    <label><input type="radio" name="payment[method]" value="paypal" />Paypal</label><br />
+
+    <div id="registration-card-fields" style="display:none;">
+      <input type="text" name="card[number]" placeholder="Card number" /><br />
+      <input type="text" name="card[expiry_month]" placeholder="MM" />
+      <input type="text" name="card[expiry_year]" placeholder="YYYY" />
+      <input type="text" name="card[verification_value]" placeholder="CVV" /><br />
+    </div>
+
+    <div id="registration-invoice-fields" style="display:none;">
+      <input type="text" name="billing_address[address]" placeholder="Address" /><br />
+      <input type="text" name="billing_address[city]" placeholder="City" /><br />
+      <input type="text" name="billing_address[country]" placeholder="Country" /><br />
+      <input type="text" name="billing_address[state_province_region]" placeholder="State/Province/Region" /><br />
+      <input type="text" name="billing_address[zip_postal_code]" placeholder="Zip/Postal code" /><br />
+      <input type="text" name="payment[reference]" placeholder="PO Number" /><br />
+    </div>
+
+    <input type="submit" value="Register" />
+  </form>
+
+</body>
+</html>

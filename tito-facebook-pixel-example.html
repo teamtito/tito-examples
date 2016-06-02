@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+  <head>
+    <title>Tito Sample Event Tracking</title>
+    <script src="https://js.tito.io/v1"></script>
+    <script>
+    var facebook_pixel_id = 'XXX'
+    </script>
+    <!-- Facebook Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','//connect.facebook.net/en_US/fbevents.js');
+
+    fbq('init', facebook_pixel_id);
+    </script>
+    <!-- End Facebook Pixel Code -->
+    <script>
+      Tito.on('event:landing', function(data){
+        
+      })
+      Tito.on('registration:started', function(data){
+        
+        var facebook_pixel_id = 'XXX'
+
+        var conversion = document.getElementById('conversion').innerHTML
+        noscript.innerHTML = conversion
+
+        document.querySelectorAll('body')[0].appendChild(script)
+        document.querySelectorAll('body')[0].appendChild(noscript)
+      })
+      Tito.on('registration:filling', function(data){
+        
+      })
+      Tito.on('registration:finished', function(data){
+        
+      })
+      Tito.on('registration:complete', function(data){
+        
+      });
+    </script>
+    <script type="text/html" id="conversion">
+      <img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=427731834101286&ev=PageView&noscript=1"
+    />
+    </script>
+  </head>

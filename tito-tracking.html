@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+  <head>
+    <title>Tito Sample Event Tracking</title>
+    <script src="https://js.tito.io/v1"></script>
+    <script>
+      if(!console){var console = function(){};}
+
+      var googlePropertyId = 'UA-XXXXXXX';
+      var googleDomains    = [
+        'example.com'
+      ];
+
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', googlePropertyId, 'auto', {'allowLinker': true});
+      ga('require', 'linker');
+      ga('require', 'ec');
+
+      ga('linker:autoLink', googleDomains);
+
+      Tito.on('event:landing', function(data){
+        console.log('[Tracking]', 'landing with', data)
+        ga('send', 'pageview', '/tito/example-account/example-event');
+      })
+      Tito.on('registration:started', function(data){
+        console.log('[Tracking]', 'registration started with', data)
+        for(var i=0; i<data.line_items.length; i++)
+        {
+          line_item = data.line_items[i];
+          ga('ec:addProduct', {
+            'id': line_item.release_slug,
+            'name': line_item.title,
+            'price': line_item.price,
+            'quantity': line_item.quantity
+          });
+          ga('ec:setAction', 'add');
+        }
+        ga('send', 'pageview', '/tito/example-account/example-event/registrations/' + data.slug);
+        ga('send', 'event', 'tito', 'registration:started', 'Started registering');
+      })
+      Tito.on('registration:filling', function(data){
+        ga('ec:setAction','checkout', {
+            'step': 1,            // A value of 1 indicates this action is first checkout step.
+            'name': data.name,
+            'email': data.email
+        });
+        ga('send', 'event', 'tito', 'registration:filling', 'Started filling in registration details');
+      })
+      Tito.on('registration:finished', function(data){
+        console.log('[Tracking]', 'finishing with', data)
+        ga('set', '&cu', data.currency);
+        for(var i=0; i<data.line_items.length; i++)
+        {
+          line_item = data.line_items[i];
+          ga('ec:addProduct', {
+            'id': line_item.release_slug,
+            'name': line_item.title,
+            'price': line_item.price,
+            'quantity': line_item.quantity,
+            'category': 'Ticket',
+            'brand': 'Tito'
+          });
+        }
+        ga('ec:setAction', 'purchase', {
+          'id': data.slug,
+          'revenue': data.total,
+          'tax': data.receipt.tax,
+          'coupon': data.discount_code    // User added a coupon at checkout.
+        });
+        ga('send', 'pageview', '/tito/example-account/example-event/registrations/' + data.slug);
+        ga('send', 'event', 'tito', 'registration:finished', 'Registration finished');
+      })
+      Tito.on('registration:complete', function(data){
+        console.log('[Tracking]', 'completing with', data)
+        ga('set', '&cu', data.currency);
+        for(var i=0; i<data.line_items.length; i++)
+        {
+          line_item = data.line_items[i];
+          ga('ec:addProduct', {
+            'id': line_item.release_slug,
+            'name': line_item.title,
+            'price': line_item.price,
+            'quantity': line_item.quantity,
+            'category': 'Ticket',
+            'brand': 'Tito'
+          });
+        }
+        ga('ec:setAction', 'purchase', {
+          'id': data.slug,
+          'revenue': data.total,
+          'tax': data.receipt.tax,
+          'coupon': data.discount_code    // User added a coupon at checkout.
+        });
+        ga('send', 'event', 'tito', 'registration:complete', 'Registration complete');
+      });
+    </script>
+  </head>
