@@ -22,7 +22,7 @@
           for(var i = 0; i < this.event.releases.length; i++) {
             release = this.event.releases[i];
             price   = (release.attributes.price !== null) ? release.attributes.price : 'Free'
-            $('#releases').append('<input type="number" name="release_ids[' + release.id + ']" placeholder="Quantity" /> ' + release.attributes.title + ' (' + price + ') <br />')
+            $('#releases').append('<input type="number" name="quantities[' + release.id + ']" placeholder="Quantity" /> ' + release.attributes.title + ' (' + price + ') <br />')
           }
         },
 
@@ -123,6 +123,9 @@
         registrationParameters: function() {
           $form = $('#registration-form')
           return {
+            email:              $form.find('input[name=email]').val(),
+            name:               $form.find('input[name=name]').val(),
+            company_name:       $form.find('input[name=company_name]').val(),
             billing_address: {
               address:               $form.find("input[name='billing_address\[address\]']").val(),
               city:                  $form.find("input[name='billing_address\[city\]']").val(),
@@ -136,11 +139,10 @@
               number:             $form.find("input[name='card\[number\]']").val(),
               verification_value: $form.find("input[name='card\[verification_value\]']").val(),
             },
-            email:                          $form.find('input[name=email]').val(),
-            name:                           $form.find('input[name=name]').val(),
-            company_name:                   $form.find('input[name=company_name]').val(),
-            payment_reference:              $form.find("input[name='payment\[reference\]']").val(),
-            payment_option_type:            $form.find("input[name='payment\[method\]']:checked").val()
+            payment: {
+              method:    $form.find("input[name='payment\[method\]']:checked").val(),
+              reference: $form.find("input[name='payment\[reference\]']").val()
+            }
           }
         },
 
@@ -162,15 +164,15 @@
         },
 
         ticketSelectionParameters: function($form) {
-          releaseIds = {}
+          quantities = {}
           $form = $('#ticket-selection-form')
-          $form.find('input[name*=release_ids]').each(function(i, release) {
+          $form.find('input[name*=quantities]').each(function(i, release) {
             slug = release.name.match(/[^\[\]]+(?=\])/g)[0]
-            releaseIds[slug] = release.value
+            quantities[slug] = release.value
           });
           return {
-            release_ids: releaseIds,
-            test_mode:   true,
+            quantities: quantities,
+            test_mode:  true,
           }
         }
       }
