@@ -3,7 +3,7 @@
   <head>
     <title></title>
     <meta name="charset" content="UTF-8">
-    <script src="http://code.jquery.com/jquery-2.2.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
     <script src="https://ti.to/paulca/awesomeconf/registration.js"></script>
     <script type="text/javascript">
       var App = {
@@ -26,12 +26,12 @@
           }
         },
 
-        changePaymentMethod: function() {
+        changePaymentType: function() {
           $('#registration-card-fields, #registration-invoice-fields').hide();
-          switch($("[name='payment\[method\]']:checked").val()) {
+          switch($("[name='payment\[type\]']:checked").val()) {
             case "credit_card": $('#registration-card-fields').show(); break;
             case "invoice":     $('#registration-invoice-fields').show(); break;
-            case "paypal":      break;
+            case "redirect":    break;
           }
         },
 
@@ -54,7 +54,7 @@
           this.displayStatus('');
           $('#ticket-selection-form').hide();
           $('#registration-form').show();
-          $(document).on("change", "[name='payment\[method\]']", this.changePaymentMethod.bind(this))
+          $(document).on("change", "[name='payment\[type\]']", this.changePaymentType.bind(this))
         },
 
         displayStatus: function(message) {
@@ -140,7 +140,7 @@
               verification_value: $form.find("input[name='card\[verification_value\]']").val(),
             },
             payment: {
-              method:    $form.find("input[name='payment\[method\]']:checked").val(),
+              type:      $form.find("input[name='payment\[type\]']:checked").val(),
               reference: $form.find("input[name='payment\[reference\]']").val()
             }
           }
@@ -157,7 +157,7 @@
           return false;
         },
 
-        submitRegistration: function() {
+        submitRegistration: function($form) {
           this.registration.update(this.registrationParameters());
           this.displayProcessing()
           return false;
@@ -197,9 +197,9 @@
     <input type="text" name="email" placeholder="Email" /><br />
     <input type="text" name="company_name" placeholder="Company name" /><br />
 
-    <label><input type="radio" name="payment[method]" value="credit_card" />Card</label>
-    <label><input type="radio" name="payment[method]" value="invoice" />Invoice</label>
-    <label><input type="radio" name="payment[method]" value="paypal" />Paypal</label><br />
+    <label><input type="radio" name="payment[type]" value="credit_card" />Card</label>
+    <label><input type="radio" name="payment[type]" value="invoice" />Invoice</label>
+    <label><input type="radio" name="payment[type]" value="redirect" />Paypal</label><br />
 
     <div id="registration-card-fields" style="display:none;">
       <input type="text" name="card[number]" placeholder="Card number" /><br />
