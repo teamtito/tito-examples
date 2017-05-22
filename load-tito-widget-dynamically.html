@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="charset" content="UTF-8">
+  <script src="http://code.jquery.com/jquery-2.2.0.min.js"></script>
+  <script src="https://js.tito.io/v1"></script>
+  <link rel="stylesheet" type="text/css" href='https://css.tito.io/v1.1' />
+  <script>
+    $(document).ready(function() {
+      new TitoWidget.Widget({
+        event_path:   "ultimateconf/2013",
+        container_id: "tickets",
+        // discount_code: "...",
+        // releases_ids: "...",
+      }).build();
+    });
+  </script>
+</head>
+<body>
+
+  <div id="tickets">Loading...</div>
+
+</body>
+</html>
