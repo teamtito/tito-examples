@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta name="charset" content="UTF-8">
+    <link rel="stylesheet" type="text/css" href='https://css.tito.io/v1' />
+    <script>
+      window.titoWidgetCallback = function(){
+        TitoWidget.build_widgets = false
+        document.addEventListener("DOMContentLoaded", function(event) {
+          var source = 'blog';
+          TitoWidget.additional_url_params = '&source=' + source;
+          TitoWidget.buildWidgets()
+        });
+      }
+    </script>
+    <script src="http://js.tito.io/v1"></script>
+  </head>
+<body>
+  <tito-widget event="ultimateconf/2013"></tito-widget>
+</body>
+</html>
